@@ -7,6 +7,7 @@ permissions:
   pull-requests: "read"
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - v*
@@ -21,7 +22,9 @@ jobs:
       - name: Get version
         run: |
           TAG="${{ github.ref_name }}"
-          echo "BUILD_VERSION=${TAG#v}" >> $GITHUB_ENV
+          CLEAN_TAG=$(echo ${TAG#v} | sed 's/\//-/g')
+          echo "BUILD_VERSION=${CLEAN_TAG}" >> $GITHUB_ENV
+          
       - name: Install 7-Zip
         run: |
           mkdir -p /home/runner/work/CrossMix-OS/tools
@@ -49,10 +52,11 @@ jobs:
           cd /home/runner/work/CrossMix-OS/CrossMix-OS
           zip -r "/home/runner/work/CrossMix-OS/CrossMix-OS_v${{ env.BUILD_VERSION }}.zip" ./*
       - name: Create Release
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          title: "CrossMix-OS v${{ env.BUILD_VERSION }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: "latest-S-compatibility"
+          name: "CrossMix-OS v${{ env.BUILD_VERSION }}"
+          draft: true
           prerelease: false
           files: "/home/runner/work/CrossMix-OS/CrossMix-OS_v${{ env.BUILD_VERSION }}.zip"
-          draft: true
